@@ -11,9 +11,11 @@ import {
   Button,
   Autocomplete,
   TextField,
-  CircularProgress, // For loading state
+  CircularProgress,
+  Paper,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 
 // --- Date Picker Imports ---
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -22,84 +24,30 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 // ---------------------------
 
-// --- SAMPLE DATA (Copied from API response) ---
-const SAMPLE_API_DATA = [
-  {
-    presentation: {
-      title: "New York",
-      suggestionTitle: "New York (Any)",
-      subtitle: "United States",
-    },
-    navigation: {
-      entityId: "27537542",
-      entityType: "CITY",
-      localizedName: "New York",
-      relevantFlightParams: {
-        skyId: "NYCA",
-        entityId: "27537542",
-        flightPlaceType: "CITY",
-        localizedName: "New York",
-      },
-    },
-  },
-  {
-    presentation: {
-      title: "New York Newark",
-      suggestionTitle: "New York Newark (EWR)",
-      subtitle: "United States",
-    },
-    navigation: {
-      entityId: "95565059",
-      entityType: "AIRPORT",
-      localizedName: "New York Newark",
-      relevantFlightParams: {
-        skyId: "EWR",
-        entityId: "95565059",
-        flightPlaceType: "AIRPORT",
-        localizedName: "New York Newark",
-      },
-    },
-  },
-  {
-    presentation: {
-      title: "New York John F. Kennedy",
-      suggestionTitle: "New York John F. Kennedy (JFK)",
-      subtitle: "United States",
-    },
-    navigation: {
-      entityId: "95565058",
-      entityType: "AIRPORT",
-      localizedName: "New York John F. Kennedy",
-      relevantFlightParams: {
-        skyId: "JFK",
-        entityId: "95565058",
-        flightPlaceType: "AIRPORT",
-        localizedName: "New York John F. Kennedy",
-      },
-    },
-  },
-  {
-    presentation: {
-      title: "New York LaGuardia",
-      suggestionTitle: "New York LaGuardia (LGA)",
-      subtitle: "United States",
-    },
-    navigation: {
-      entityId: "95565057",
-      entityType: "AIRPORT",
-      localizedName: "New York LaGuardia",
-      relevantFlightParams: {
-        skyId: "LGA",
-        entityId: "95565057",
-        flightPlaceType: "AIRPORT",
-        localizedName: "New York LaGuardia",
-      },
-    },
-  },
-];
+// 💡 IMPORT YOUR REAL API FUNCTIONS HERE
+// Assuming your provided functions are in a file named 'apis.js'
+import { searchAirports, searchFlights } from "./apis"; 
+
+// --- MOCK LOCATION PLACEHOLDERS (For initial state only, real data will replace them) ---
+const INITIAL_LONDON = {
+  skyId: "LOND",
+  entityId: "27544008",
+  localizedName: "London (Any)",
+  suggestionTitle: "London (Any)",
+  subtitle: "United Kingdom",
+};
+
+const INITIAL_NEW_YORK = {
+  skyId: "NYCA",
+  entityId: "27537542",
+  localizedName: "New York (Any)",
+  suggestionTitle: "New York (Any)",
+  subtitle: "United States",
+};
 // ---------------------------------------------
 
-// 1. Define the Dark Theme (Unchanged from previous response)
+
+// 2. Define the Dark Theme (Unchanged)
 const darkTheme = createTheme({
   palette: {
     mode: "dark",
@@ -158,24 +106,30 @@ const darkTheme = createTheme({
 });
 
 const App = () => {
-  // Flight fields
-  const [departure, setDeparture] = React.useState(null);
-  const [destination, setDestination] = React.useState(null);
+  // --- Search Input States ---
+  const [tripType, setTripType] = React.useState("round");
+  const [passengers, setPassengers] = React.useState(1);
+  const [cabinClass, setCabinClass] = React.useState("economy");
+  const [departure, setDeparture] = React.useState(INITIAL_LONDON);
+  const [destination, setDestination] = React.useState(INITIAL_NEW_YORK);
+  const [departureDate, setDepartureDate] = React.useState(
+    dayjs().add(1, 'day') // Default to tomorrow or a valid date
+  );
+  const [returnDate, setReturnDate] = React.useState(dayjs().add(8, "day"));
 
-  // New state variables for Autocomplete options
+  // Autocomplete state
   const [departureOptions, setDepartureOptions] = React.useState([]);
   const [destinationOptions, setDestinationOptions] = React.useState([]);
   const [loadingDeparture, setLoadingDeparture] = React.useState(false);
   const [loadingDestination, setLoadingDestination] = React.useState(false);
 
-  // Date variables
-  const [departureDate, setDepartureDate] = React.useState(dayjs());
-  const [returnDate, setReturnDate] = React.useState(dayjs().add(7, "day"));
+  // --- Search Results States ---
+  const [isSearching, setIsSearching] = React.useState(false);
+  const [flightResults, setFlightResults] = React.useState(null);
+  const [searchParams, setSearchParams] = React.useState(null);
 
   /**
-   * ✈️ SIMULATED API CALL: Uses hardcoded sample data instead of axios.
-   * This function simulates the network delay and returns the static results
-   * when the user types 'new' (case-insensitive).
+   * ✈️ REAL API CALL: Fetches airport suggestions using the provided searchAirports function.
    */
   const fetchAirportSuggestions = async (
     query,
@@ -190,46 +144,153 @@ const App = () => {
 
     setLoadingState(true);
 
-    // 2. Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      const apiResponse = await searchAirports(query);
+      
+      // Map the response data to the desired format for the Autocomplete component
+      const formattedData = apiResponse.data.map((item) => ({
+        // Use relevantFlightParams for specific IDs if available, otherwise use entity IDs
+        skyId: item.navigation.relevantFlightParams?.skyId || item.navigation.entityId,
+        entityId: item.navigation.entityId,
+        localizedName: item.navigation.localizedName,
+        suggestionTitle: item.presentation.suggestionTitle,
+        subtitle: item.presentation.subtitle,
+      }));
 
-    // 3. Define the response data based on the query (for demonstration purposes)
-    const rawData = query.toLowerCase().includes("new")
-      ? SAMPLE_API_DATA // Return full list if 'new' is typed
-      : []; // Return empty list otherwise
-
-    // 4. Map the response data to the desired format
-    const formattedData = rawData.map((item) => ({
-      skyId:
-        item.navigation.relevantFlightParams?.skyId || item.navigation.entityId,
-      localizedName: item.navigation.localizedName,
-      suggestionTitle: item.presentation.suggestionTitle,
-      subtitle: item.presentation.subtitle,
-    }));
-
-    // 5. Update state
-    setOptionsState(formattedData);
-    setLoadingState(false);
+      setOptionsState(formattedData);
+    } catch (error) {
+      console.error("Airport search failed:", error);
+      setOptionsState([]);
+    } finally {
+      setLoadingState(false);
+    }
   };
 
-  const handleSearch = () => {
-    if (!departure || !destination) {
-      alert("Please select both Departure and Destination locations.");
+
+  /**
+   * ✈️ REAL API CALL: Performs the flight search using the provided searchFlights function.
+   */
+  const handleSearch = async () => {
+    if (!departure || !destination || !departureDate || !departure.skyId || !departure.entityId) {
+      alert("Please select both Departure and Destination locations with valid data.");
       return;
     }
 
-    console.log("Searching for flights with parameters:");
-    console.log("Departure:", departure.skyId, departure.localizedName);
-    console.log("Destination:", destination.skyId, destination.localizedName);
-    console.log("Departure Date:", departureDate.format("YYYY-MM-DD"));
-    console.log("Return Date:", returnDate.format("YYYY-MM-DD"));
+    // 1. Construct the Parameters
+    const params = {
+      origId: departure.skyId,
+      destId: destination.skyId,
+      origEId: departure.entityId,
+      destEId: destination.entityId,
+      date: departureDate.format("YYYY-MM-DD"),
+      // The API you provided doesn't explicitly show a return date parameter, 
+      // so we'll pass the core required ones. For a round trip, 
+      // you would typically need a separate search or a dedicated parameter.
+      // For this implementation, we focus on the searchFlights signature you provided.
+      cabinClass: cabinClass,
+      adults: passengers.toString(),
+    };
+
+    console.log("Calling API with parameters:", params);
+    setSearchParams(params); // Save parameters for display
+    setIsSearching(true);
+    setFlightResults(null);
+
+    try {
+      // 2. Call the REAL API function
+      const apiResponse = await searchFlights(params);
+
+      // 3. Set Results
+      setFlightResults(apiResponse);
+    } catch (error) {
+      console.error("Flight search failed:", error);
+      setFlightResults({ status: false, error: "Flight search failed. Check console for details." });
+    } finally {
+      setIsSearching(false);
+    }
   };
+
+  // --- Utility Render Functions (Modified to handle real-time date/time parsing) ---
+
+  const formatDuration = (minutes) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h}h ${m}m`;
+  }
+
+  const renderFlightLeg = (leg, index) => (
+    <Box
+      key={index}
+      sx={{
+        p: 2,
+        borderRadius: 1,
+        border: "1px solid rgba(255,255,255,0.1)",
+        my: 1,
+        backgroundColor: "rgba(0,0,0,0.2)",
+      }}
+    >
+      <Typography variant="body2" color="primary" fontWeight="bold">
+        {index === 0 ? "Outbound Leg" : "Return Leg"} ({leg.stopCount} stop
+        {leg.stopCount !== 1 ? "s" : ""})
+      </Typography>
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={12} sm={6}>
+          <Typography variant="body1">
+            **{dayjs(leg.departure).format("HH:mm")}** ({leg.origin.displayCode})
+            <br />
+            {leg.origin.name}
+          </Typography>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Typography variant="body1">
+            **{dayjs(leg.arrival).format("HH:mm")}** ({leg.destination.displayCode})
+            <br />
+            {leg.destination.name}
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <Typography variant="caption" color="text.secondary">
+            {leg.carriers.marketing[0]?.name || 'Unknown Carrier'} | Duration:{" "}
+            {formatDuration(leg.durationInMinutes)}
+          </Typography>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+
+  const renderFlightItinerary = (itinerary) => {
+    return (
+      <Paper elevation={4} sx={{ my: 3, p: 3 }}>
+        <Grid container spacing={3} alignItems="center">
+          {/* Price */}
+          <Grid item xs={12} md={3}>
+            <Box textAlign="center">
+              <AttachMoneyIcon color="primary" sx={{ fontSize: 32 }} />
+              <Typography variant="h4" color="primary">
+                {itinerary.price?.formatted || 'Price N/A'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {itinerary.tags?.join(" | ").toUpperCase() || 'BEST MATCH'}
+              </Typography>
+            </Box>
+          </Grid>
+          {/* Legs */}
+          <Grid item xs={12} md={9}>
+            {itinerary.legs.map(renderFlightLeg)}
+          </Grid>
+        </Grid>
+      </Paper>
+    );
+  };
+
+  const datePickerGridSize = 3;
 
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Container maxWidth="lg">
+          {/* Hero Section (Unchanged) */}
           <Box textAlign="center" mt={4}>
             <img
               src="https://www.gstatic.com/travel-frontend/animation/hero/flights_nc_dark_theme_4.svg"
@@ -253,6 +314,7 @@ const App = () => {
                 padding: 4,
                 borderRadius: 2,
                 boxShadow: 3,
+                mb: 4,
               }}
             >
               {/* Trip, Passengers, Cabin Selections (Unchanged) */}
@@ -268,9 +330,9 @@ const App = () => {
                     size="small"
                     fullWidth
                     label="Trip"
-                    defaultValue="round"
+                    value={tripType}
+                    onChange={(e) => setTripType(e.target.value)}
                     name="tripType"
-                    // Use <option> tags for native select within TextField
                     SelectProps={{ native: true }}
                   >
                     <option value="oneway">One-way</option>
@@ -284,10 +346,11 @@ const App = () => {
                     size="small"
                     fullWidth
                     label="Passengers"
-                    defaultValue={1}
+                    value={passengers}
+                    onChange={(e) => setPassengers(Number(e.target.value))}
                     name="passengers"
                     SelectProps={{ native: true }}
-                    sx={{minWidth:90}}
+                    sx={{ minWidth: 90 }}
                   >
                     {Array.from({ length: 9 }, (_, i) => i + 1).map((n) => (
                       <option key={n} value={n}>
@@ -303,7 +366,8 @@ const App = () => {
                     size="small"
                     fullWidth
                     label="Cabin"
-                    defaultValue="economy"
+                    value={cabinClass}
+                    onChange={(e) => setCabinClass(e.target.value)}
                     name="cabinClass"
                     SelectProps={{ native: true }}
                   >
@@ -336,7 +400,6 @@ const App = () => {
                     <Autocomplete
                       options={departureOptions}
                       loading={loadingDeparture}
-                      // Keying by skyId ensures distinct selection even if titles are similar
                       getOptionLabel={(option) =>
                         option.suggestionTitle || option.localizedName || ""
                       }
@@ -348,7 +411,7 @@ const App = () => {
                         setDeparture(newValue);
                       }}
                       onInputChange={(event, newInputValue) => {
-                        // Call the SIMULATED fetch function
+                        // Call REAL API function
                         fetchAirportSuggestions(
                           newInputValue,
                           setDepartureOptions,
@@ -408,7 +471,7 @@ const App = () => {
                         setDestination(newValue);
                       }}
                       onInputChange={(event, newInputValue) => {
-                        // Call the SIMULATED fetch function
+                        // Call REAL API function
                         fetchAirportSuggestions(
                           newInputValue,
                           setDestinationOptions,
@@ -451,19 +514,30 @@ const App = () => {
                   </FormControl>
                 </Grid>
 
-                {/* Date Pickers (Unchanged) */}
-                <Grid item xs={12} sm={6} md={3}>
+                {/* Departure Date Picker */}
+                <Grid item xs={12} sm={6} md={datePickerGridSize}>
                   <DatePicker
                     label="Date"
+                    minDate={dayjs().add(1, 'day')}
                     value={departureDate}
                     onChange={(newValue) => setDepartureDate(newValue)}
                     slotProps={{ textField: { fullWidth: true } }}
                   />
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={3}>
+                {/* Return Date Picker - VISIBLE BUT RESERVING SPACE */}
+                <Grid
+                  item
+                  xs={12}
+                  sm={6}
+                  md={datePickerGridSize}
+                  sx={{
+                    visibility: tripType === "oneway" ? "hidden" : "visible",
+                  }}
+                >
                   <DatePicker
                     label="Return Date"
+                    minDate={departureDate}
                     value={returnDate}
                     onChange={(newValue) => setReturnDate(newValue)}
                     slotProps={{ textField: { fullWidth: true } }}
@@ -471,18 +545,91 @@ const App = () => {
                 </Grid>
               </Grid>
 
-              {/* Search Button (Unchanged) */}
+              {/* Search Button */}
               <div style={{ marginTop: "30px", textAlign: "center" }}>
                 <Button
                   variant="search"
                   size="large"
-                  startIcon={<SearchIcon />}
+                  startIcon={
+                    isSearching ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      <SearchIcon />
+                    )
+                  }
                   onClick={handleSearch}
+                  disabled={isSearching}
                 >
-                  Search
+                  {isSearching ? "Searching..." : "Search Flights"}
                 </Button>
               </div>
             </Box>
+
+            {/* --- FLIGHT SEARCH RESULTS SECTION --- */}
+            {isSearching && (
+              <Box textAlign="center" my={4}>
+                <CircularProgress color="primary" />
+                <Typography variant="h6" sx={{ mt: 2 }}>
+                  Searching for the best flights...
+                </Typography>
+              </Box>
+            )}
+
+            {flightResults && !isSearching && (
+              <Box mt={4}>
+                <Typography variant="h4" gutterBottom>
+                  ✈️ Search Results
+                </Typography>
+
+                {flightResults.status === false && flightResults.error ? (
+                  <Paper sx={{ p: 3, backgroundColor: 'red', color: 'white' }}>
+                    <Typography variant="h6">Error:</Typography>
+                    <Typography>{flightResults.error}</Typography>
+                    <Typography variant="caption">
+                      Please check the API key, host, and request limits.
+                    </Typography>
+                  </Paper>
+                ) : (
+                  <>
+                    <Paper sx={{ p: 3, mb: 3 }} elevation={2}>
+                      <Typography variant="subtitle1" color="primary">
+                        **Search Parameters Used:**
+                      </Typography>
+                      <Grid container spacing={1} sx={{ mt: 1 }}>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="body2">
+                            **Origin/Dest:** {searchParams.origId} $\rightarrow$ {searchParams.destId}
+                          </Typography>
+                          <Typography variant="body2">
+                            **Date:** {searchParams.date}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="body2">
+                            **Trip Type:** {tripType === 'round' ? 'Round-trip' : 'One-way'}
+                          </Typography>
+                          <Typography variant="body2">
+                            **Details:** {searchParams.adults} Adult(s), {searchParams.cabinClass}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </Paper>
+
+                    <Typography variant="h5" sx={{ mb: 2 }}>
+                      Best Itineraries ({flightResults.data?.context?.totalResults || 0} results found)
+                    </Typography>
+
+                    {flightResults.data?.itineraries?.length > 0
+                      ? flightResults.data.itineraries.slice(0, 3).map((itinerary, index) => (
+                          renderFlightItinerary(itinerary)
+                        ))
+                      : <Typography>No flight itineraries found for these parameters.</Typography>
+                    }
+                  </>
+                )}
+              </Box>
+            )}
+            {/* --- END FLIGHT SEARCH RESULTS SECTION --- */}
           </Container>
         </Container>
       </LocalizationProvider>
