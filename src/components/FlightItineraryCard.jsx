@@ -17,13 +17,13 @@ import {
 import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
 import FlightLandIcon from "@mui/icons-material/FlightLand";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import BedtimeIcon from "@mui/icons-material/Bedtime"; // Icon for overnight
 import dayjs from "dayjs";
 import FlightSegment from "./FlightSegment";
 import LayoverSegment from "./LayoverSegment";
 import { formatDuration, hasOvernight } from "../utils/itineraryUtils";
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
 const renderDetailedItinerary = (itinerary) => {
   const segmentsAndLayovers = [];
@@ -103,6 +103,25 @@ const FlightItineraryCard = ({ itinerary }) => {
   const totalDuration = formatDuration(departureLeg.durationInMinutes);
   const totalStops = departureLeg.stopCount;
   const carrierName = departureLeg.carriers.marketing[0].name.split(" ")[0];
+  const departureTime = dayjs(departureLeg.departure);
+  const arrivalTime = dayjs(departureLeg.arrival);
+  const dayDifference = arrivalTime
+    .startOf("day")
+    .diff(departureTime.startOf("day"), "day");
+  const arrivalTimeDisplay = arrivalTime.format("h:mm A");
+  const departureTimeDisplay = departureTime.format("h:mm A");
+
+  const dayIndicator = dayDifference > 0 ? `+${dayDifference}` : "";
+
+  // Tooltip text for time
+  const timeTooltip = `${departureTime.format(
+    "MMM D, h:mm A"
+  )} - ${arrivalTime.format("MMM D, h:mm A")} ${
+    dayDifference > 0
+      ? `(${dayDifference} day${dayDifference > 1 ? "s" : ""} travel time)`
+      : "(Same day arrival)"
+  }`;
+  // ------------------------------------
 
   // Map operating carriers to get a unique list of names for display
   const operatingCarrierNames = [
@@ -112,14 +131,6 @@ const FlightItineraryCard = ({ itinerary }) => {
   ].join(", ");
 
   const price = itinerary.price?.formatted || "N/A";
-  const emissionSavings = itinerary.eco?.ecoContenderDelta
-    ? Math.round(itinerary.eco.ecoContenderDelta)
-    : 2234;
-  const emissionPercent =
-    emissionSavings > 0
-      ? `+${Math.round((emissionSavings / 2234) * 100)}%`
-      : "+65%";
-
   // Find the first layover city and duration for display in the summary
   const firstLayover = departureLeg.segments.reduce(
     (acc, segment, index, array) => {
@@ -179,9 +190,9 @@ const FlightItineraryCard = ({ itinerary }) => {
         }}
       >
         <Box sx={{ p: 2, width: "100%" }}>
-          <Grid container alignItems="center" spacing={2}>
+          <Grid display={"flex"} justifyContent={'space-between'} alignItems="center" spacing={2}>
             {/* Left Section: Time, Route, Airlines */}
-            <Grid item xs={12} md={5}>
+            <Grid>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 {/* First Airline Icon (using a placeholder Avatar) */}
                 <Avatar
@@ -198,16 +209,25 @@ const FlightItineraryCard = ({ itinerary }) => {
                 </Avatar>
                 <Box>
                   {/* Time from to */}
-                  <Typography variant="h6" fontWeight={700}>
-                    {dayjs(departureLeg.departure).format("h:mm A")} —{" "}
-                    {dayjs(departureLeg.arrival).format("h:mm A")}
-                  </Typography>
+                  <Tooltip title={timeTooltip} arrow>
+                    <Typography variant="body1" fontWeight={500}>
+                      {departureTimeDisplay} — {arrivalTimeDisplay}
+                      {dayIndicator && (
+                        <Box
+                          component="span"
+                          sx={{
+                            ml: 0.5,
+                            color: "text.secondary",
+                            fontSize: "0.7em",
+                          }}
+                        >
+                          {dayIndicator}
+                        </Box>
+                      )}
+                    </Typography>
+                  </Tooltip>
                   {/* Name of all airlines that are operating */}
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mt: 0.5 }}
-                  >
+                  <Typography fontSize={11} color="text.secondary">
                     {operatingCarrierNames}
                   </Typography>
                 </Box>
@@ -215,14 +235,14 @@ const FlightItineraryCard = ({ itinerary }) => {
             </Grid>
 
             {/* Middle Section: Total Time, Stops, and CO2 */}
-            <Grid item xs={12} md={5}>
+            <Grid>
               <Grid container spacing={2}>
                 {/* Total Time & Route */}
                 <Grid item xs={4} sx={{ textAlign: "center" }}>
-                  <Typography variant="body1" fontWeight={600}>
+                  <Typography variant="body1" fontWeight={500}>
                     {totalDuration}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography fontSize={11} color="text.secondary">
                     <Tooltip
                       title={`${departureLeg.origin.displayCode}: ${departureLeg.origin.city}, ${departureLeg.origin.country} to ${departureLeg.destination.displayCode}: ${departureLeg.destination.city}, ${departureLeg.destination.country}`}
                     >
@@ -246,9 +266,9 @@ const FlightItineraryCard = ({ itinerary }) => {
                       {totalStops} stop{totalStops !== 1 ? "s" : ""}
                     </Typography>
                     {overnight && (
-                      <BedtimeIcon
+                      <WarningAmberIcon
                         fontSize="small"
-                        sx={{ color: "error.main" }}
+                        sx={{ color: "warning.main" }}
                       />
                     )}
                   </Box>
@@ -269,25 +289,11 @@ const FlightItineraryCard = ({ itinerary }) => {
                     )}
                   </Typography>
                 </Grid>
-
-                {/* CO2 Emissions */}
-                <Grid item xs={4} sx={{ textAlign: "center" }}>
-                  <Typography
-                    variant="body1"
-                    fontWeight={600}
-                    color="warning.main"
-                  >
-                    {emissionSavings} kg CO2e
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {emissionPercent} emissions
-                  </Typography>
-                </Grid>
               </Grid>
             </Grid>
 
             {/* Right Section: Price */}
-            <Grid item xs={12} md={2}>
+            <Grid>
               <Box
                 sx={{
                   textAlign: { xs: "left", md: "right" },
@@ -299,135 +305,12 @@ const FlightItineraryCard = ({ itinerary }) => {
                   pl: { md: 2 },
                 }}
               >
-                <Typography variant="h5" color="success.main" fontWeight={700}>
+                <Typography variant="h5" fontWeight={400}>
                   {price}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Total Price
                 </Typography>
               </Box>
             </Grid>
           </Grid>
-
-          {/* This section contains the original chip-based design, keeping it for reference/fallback */}
-          {/* <Grid container alignItems="center" spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={7}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" fontWeight={700}>
-                    {dayjs(departureLeg.departure).format("h:mm A")} —{" "}
-                    {dayjs(departureLeg.arrival).format("h:mm A")}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1 }}
-                  >
-                    {departureLeg.origin.city} → {departureLeg.destination.city}
-                  </Typography>
-                  <Box
-                    sx={{
-                      mt: 0.5,
-                      display: "flex",
-                      gap: 1,
-                      flexWrap: "wrap",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Chip
-                      label={totalDuration}
-                      size="small"
-                      sx={{
-                        bgcolor: "rgba(255,255,255,0.06)",
-                        color: "text.primary",
-                        fontWeight: 500,
-                      }}
-                    />
-                    <Chip
-                      label={`${totalStops} stop${totalStops !== 1 ? "s" : ""}`}
-                      size="small"
-                      sx={{
-                        bgcolor: "rgba(255,255,255,0.06)",
-                        color: "text.primary",
-                        fontWeight: 600,
-                      }}
-                    />
-                    {hasOvernight(itinerary) && (
-                      <Chip
-                        size="small"
-                        label="Overnight"
-                        sx={{
-                          ml: 0.5,
-                          height: 24,
-                          bgcolor: "rgba(200,1,2,10)",
-                          color: "text.error",
-                          fontWeight: 700,
-                        }}
-                      />
-                    )}
-                    {itinerary.tags &&
-                      itinerary.tags.map((tag, index) => (
-                        <Chip
-                          key={index}
-                          label={tag.replace(/_/g, " ")}
-                          size="small"
-                          sx={{
-                            bgcolor: "rgba(255,255,255,0.04)",
-                            color: "text.primary",
-                            fontWeight: 500,
-                          }}
-                        />
-                      ))}
-                  </Box>
-                </Box>
-              </Box>
-            </Grid>
-
-            <Grid item xs={8} md={3}>
-              <Box
-                sx={{
-                  textAlign: { xs: "left", md: "center" },
-                  borderLeft: { md: "1px solid rgba(255,255,255,0.1)" },
-                  pl: { md: 3 },
-                }}
-              >
-                <Typography
-                  variant="subtitle2"
-                  color="warning.main"
-                  fontWeight={600}
-                >
-                  {emissionSavings} kg CO2e
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {emissionPercent} vs avg
-                </Typography>
-              </Box>
-            </Grid>
-
-            <Grid item xs={4} md={2}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: { xs: "flex-end", md: "flex-end" },
-                  alignItems: "center",
-                  gap: 2,
-                }}
-              >
-                <Box sx={{ textAlign: "right" }}>
-                  <Typography
-                    variant="h5"
-                    color="success.main"
-                    fontWeight={700}
-                  >
-                    {price}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Total
-                  </Typography>
-                </Box>
-              </Box>
-            </Grid>
-          </Grid> */}
         </Box>
       </AccordionSummary>
 

@@ -3427,13 +3427,27 @@ const App = () => {
                 ) : (
                   <>
                     <div style={{ mb: 2 }}>
-                      <Typography  fontSize={20} fontWeight={500}>
-                        All Flights
-                      </Typography>
-                      <Typography fontSize={12} fontWeight={400} color="#9aa0a6">
-                        Prices include required taxes + fees for {passengers} passengers.
-                        Optional charges and bag fees may apply.
-                      </Typography>
+                      <Grid
+                        display={"flex"}
+                        justifyContent={"space-between"}
+                        alignItems={"center"}
+                      >
+                        <div>
+                          <Typography fontSize={20} fontWeight={500}>
+                            All Flights
+                          </Typography>
+                          <Typography
+                            fontSize={12}
+                            fontWeight={400}
+                            color="#9aa0a6"
+                          >
+                            Prices include required taxes + fees for{" "}
+                            {passengers} passengers. Optional charges and bag
+                            fees may apply.
+                          </Typography>
+                        </div>
+                        <div>Sorting here</div>
+                      </Grid>
                     </div>
 
                     {flightResults.data?.itineraries?.length > 0 ? (
