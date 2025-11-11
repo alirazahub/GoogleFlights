@@ -23,7 +23,7 @@ import dayjs from "dayjs";
 import FlightSegment from "./FlightSegment";
 import LayoverSegment from "./LayoverSegment";
 import { formatDuration, hasOvernight } from "../utils/itineraryUtils";
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
 const renderDetailedItinerary = (itinerary) => {
   const segmentsAndLayovers = [];
@@ -134,7 +134,6 @@ const FlightItineraryCard = ({ itinerary }) => {
   // Find the first layover city and duration for display in the summary
   const firstLayover = departureLeg.segments.reduce(
     (acc, segment, index, array) => {
-      console.log(segment);
       if (acc) return acc;
       if (index < array.length - 1) {
         const arrivalTime = dayjs(segment.arrival);
@@ -189,18 +188,21 @@ const FlightItineraryCard = ({ itinerary }) => {
           },
         }}
       >
-        <Box sx={{ p:1, width: "100%" }}>
-          <Grid display={"flex"} justifyContent={'space-between'} alignItems="center" spacing={2}>
-            {/* Left Section: Time, Route, Airlines */}
-            <Grid>
+        <Box sx={{ p: 1, width: "100%" }}>
+          <Grid container display={'flex'} justifyContent={"space-between"} spacing={2} alignItems="center">
+            <Grid item xs={12} md={5}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                {/* First Airline Icon (using a placeholder Avatar) */}
                 <Avatar
                   sx={{
                     bgcolor: "primary.main",
                     width: 40,
                     height: 40,
                     fontSize: "0.8rem",
+                    transition: "width 150ms ease, height 150ms ease",
+                    "@media (min-width:600px)": {
+                      width: 50,
+                      height: 50,
+                    },
                   }}
                   variant="rounded"
                   src={departureLeg.carriers.marketing[0].logoUrl}
@@ -208,7 +210,6 @@ const FlightItineraryCard = ({ itinerary }) => {
                   {carrierName.charAt(0)}
                 </Avatar>
                 <Box>
-                  {/* Time from to */}
                   <Tooltip title={timeTooltip} arrow>
                     <Typography variant="body1" fontWeight={500}>
                       {departureTimeDisplay} — {arrivalTimeDisplay}
@@ -226,7 +227,6 @@ const FlightItineraryCard = ({ itinerary }) => {
                       )}
                     </Typography>
                   </Tooltip>
-                  {/* Name of all airlines that are operating */}
                   <Typography fontSize={11} color="text.secondary">
                     {operatingCarrierNames}
                   </Typography>
@@ -234,11 +234,9 @@ const FlightItineraryCard = ({ itinerary }) => {
               </Box>
             </Grid>
 
-            {/* Middle Section: Total Time, Stops, and CO2 */}
-            <Grid>
+            <Grid item xs={8} md={4}>
               <Grid container spacing={2}>
-                {/* Total Time & Route */}
-                <Grid item xs={4} sx={{ textAlign: "center" }}>
+                <Grid item xs={6} md={12} sx={{ textAlign: { xs: "left", md: "center" } }}>
                   <Typography variant="body1" fontWeight={500}>
                     {totalDuration}
                   </Typography>
@@ -252,24 +250,26 @@ const FlightItineraryCard = ({ itinerary }) => {
                   </Typography>
                 </Grid>
 
-                {/* Stops & Layover Info */}
-                <Grid item xs={4}>
+                <Grid item xs={6} md={12}>
                   <Box
                     sx={{
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
+                      justifyContent: { xs: "flex-start", md: "center" },
                       gap: 0.5,
+                      mt: { xs: 0, md: 0 }
                     }}
                   >
                     <Typography variant="body1" fontWeight={600}>
                       {totalStops} stop{totalStops !== 1 ? "s" : ""}
                     </Typography>
                     {overnight && (
-                      <WarningAmberIcon
-                        fontSize="small"
-                        sx={{ color: "warning.main" }}
-                      />
+                      <Tooltip title="Overnight travel">
+                        <WarningAmberIcon
+                          fontSize="small"
+                          sx={{ color: "warning.main" }}
+                        />
+                      </Tooltip>
                     )}
                   </Box>
                   <Typography variant="caption" color="text.secondary">
@@ -292,16 +292,12 @@ const FlightItineraryCard = ({ itinerary }) => {
               </Grid>
             </Grid>
 
-            {/* Right Section: Price */}
-            <Grid>
+            <Grid item xs={4} md={3}>
               <Box
                 sx={{
-                  textAlign: { xs: "left", md: "right" },
-                  pt: { xs: 2, md: 0 },
-                  borderTop: {
-                    xs: "1px solid rgba(255,255,255,0.1)",
-                    md: "none",
-                  },
+                  textAlign: "right", 
+                  pt: { xs: 0, md: 0 },
+                  borderTop: "none", 
                   pl: { md: 2 },
                 }}
               >

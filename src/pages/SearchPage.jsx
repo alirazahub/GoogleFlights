@@ -1,4 +1,4 @@
-import React,{useMemo, useState} from "react";
+import React, { useMemo, useState } from "react";
 import {
   Typography,
   Box,
@@ -15,8 +15,8 @@ import {
   InputLabel,
   IconButton,
 } from "@mui/material";
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -24,7 +24,11 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import { searchAirports, searchFlights } from "../apis";
 import FlightItineraryCard from "../components/FlightItineraryCard";
-import { flightResultsFile, INITIAL_LONDON, INITIAL_NEW_YORK } from "../utils/itineraryUtils.js";
+import {
+  flightResultsFile,
+  INITIAL_LONDON,
+  INITIAL_NEW_YORK,
+} from "../utils/itineraryUtils.js";
 
 const SearchPage = () => {
   const [tripType, setTripType] = useState("round");
@@ -32,9 +36,7 @@ const SearchPage = () => {
   const [cabinClass, setCabinClass] = useState("economy");
   const [departure, setDeparture] = useState(INITIAL_LONDON);
   const [destination, setDestination] = useState(INITIAL_NEW_YORK);
-  const [departureDate, setDepartureDate] = useState(
-    dayjs().add(1, "day")
-  );
+  const [departureDate, setDepartureDate] = useState(dayjs().add(1, "day"));
   const [returnDate, setReturnDate] = useState(dayjs().add(8, "day"));
   const [departureOptions, setDepartureOptions] = useState([]);
   const [destinationOptions, setDestinationOptions] = useState([]);
@@ -48,13 +50,16 @@ const SearchPage = () => {
 
   const sortedItineraries = useMemo(() => {
     const list = (flightResults?.data?.itineraries || []).slice();
-    const safeNumber = (v) => (typeof v === "number" && !Number.isNaN(v) ? v : Number.MAX_SAFE_INTEGER);
+    const safeNumber = (v) =>
+      typeof v === "number" && !Number.isNaN(v) ? v : Number.MAX_SAFE_INTEGER;
 
     const getPrice = (it) => safeNumber(it?.price?.raw);
     const getDeparture = (it) => {
       try {
         const firstLeg = (it.legs && it.legs[0]) || null;
-        return firstLeg && firstLeg.departure ? dayjs(firstLeg.departure).valueOf() : Number.MAX_SAFE_INTEGER;
+        return firstLeg && firstLeg.departure
+          ? dayjs(firstLeg.departure).valueOf()
+          : Number.MAX_SAFE_INTEGER;
       } catch (e) {
         return Number.MAX_SAFE_INTEGER;
       }
@@ -63,7 +68,9 @@ const SearchPage = () => {
       try {
         const legs = it.legs || [];
         const last = legs[legs.length - 1] || null;
-        return last && last.arrival ? dayjs(last.arrival).valueOf() : Number.MAX_SAFE_INTEGER;
+        return last && last.arrival
+          ? dayjs(last.arrival).valueOf()
+          : Number.MAX_SAFE_INTEGER;
       } catch (e) {
         return Number.MAX_SAFE_INTEGER;
       }
@@ -206,8 +213,7 @@ const SearchPage = () => {
           />
           <Typography
             style={{ marginTop: "-100px" }}
-            variant="h2"
-            component="h1"
+            fontSize={"3rem"}
             gutterBottom
           >
             Flights
@@ -324,10 +330,7 @@ const SearchPage = () => {
                           <Typography variant="body1" fontWeight="bold">
                             {option.suggestionTitle}
                           </Typography>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                          >
+                          <Typography variant="caption" color="text.secondary">
                             {option.subtitle}
                           </Typography>
                         </Box>
@@ -383,10 +386,7 @@ const SearchPage = () => {
                           <Typography variant="body1" fontWeight="bold">
                             {option.suggestionTitle}
                           </Typography>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                          >
+                          <Typography variant="caption" color="text.secondary">
                             {option.subtitle}
                           </Typography>
                         </Box>
@@ -486,19 +486,30 @@ const SearchPage = () => {
                       alignItems={"center"}
                     >
                       <div>
-                        <Typography fontSize={20} fontWeight={500}>
+                        <Typography
+                          fontSize={{ xs: 18, sm: 24, md: 30 }}
+                          fontWeight={500}
+                        >
                           All Flights
                         </Typography>
+
                         <Typography
-                          fontSize={12}
+                          fontSize={{ xs: 10, sm: 12, md: 14 }}
                           fontWeight={400}
                           color="#9aa0a6"
+                          mt={{ xs: 0.5, sm: 1 }}
                         >
-                          Prices include required taxes + fees for {passengers} passengers. Optional charges and bag
-                          fees may apply.
+                          Prices include required taxes + fees for {passengers}{" "}
+                          passengers. Optional charges and bag fees may apply.
                         </Typography>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
+                      >
                         <FormControl size="small" sx={{ minWidth: 160 }}>
                           <InputLabel id="sort-by-label">Sort by</InputLabel>
                           <Select
@@ -508,7 +519,9 @@ const SearchPage = () => {
                             onChange={(e) => setSortField(e.target.value)}
                           >
                             <MenuItem value="price">Price</MenuItem>
-                            <MenuItem value="departure">Departure time</MenuItem>
+                            <MenuItem value="departure">
+                              Departure time
+                            </MenuItem>
                             <MenuItem value="arrival">Arrival time</MenuItem>
                             <MenuItem value="duration">Duration</MenuItem>
                           </Select>
@@ -518,7 +531,9 @@ const SearchPage = () => {
                           onClick={() =>
                             setSortOrder((o) => (o === "asc" ? "desc" : "asc"))
                           }
-                          title={sortOrder === "asc" ? "Ascending" : "Descending"}
+                          title={
+                            sortOrder === "asc" ? "Ascending" : "Descending"
+                          }
                         >
                           {sortOrder === "asc" ? (
                             <ArrowUpwardIcon />
@@ -532,18 +547,44 @@ const SearchPage = () => {
 
                   {sortedItineraries?.length > 0 ? (
                     <>
-                      {(showAllFlights ? sortedItineraries : sortedItineraries.slice(0, 3)).map((itinerary, index) => (
-                        <FlightItineraryCard key={itinerary?.id || index} itinerary={itinerary} />
+                      {(showAllFlights
+                        ? sortedItineraries
+                        : sortedItineraries.slice(0, 3)
+                      ).map((itinerary, index) => (
+                        <FlightItineraryCard
+                          key={itinerary?.id || index}
+                          itinerary={itinerary}
+                        />
                       ))}
 
                       {sortedItineraries.length > 3 && (
-                        <Box style={{border: "1px solid rgba(255,255,255,0.4)", padding:12}} textAlign="center">
+                        <Box
+                          style={{
+                            border: "1px solid rgba(255,255,255,0.4)",
+                            padding: 12,
+                          }}
+                          textAlign="center"
+                        >
                           <div
-                          style={{display:"flex", alignContent:'center', cursor:'pointer'}}
+                            style={{
+                              display: "flex",
+                              alignContent: "center",
+                              cursor: "pointer",
+                            }}
                             onClick={() => setShowAllFlights((s) => !s)}
                           >
-                            <div style={{marginLeft:10}}>{showAllFlights ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}</div>
-                            <div style={{marginLeft:30}}>{showAllFlights ? "Show less" : "View all flights"}</div>
+                            <div style={{ marginLeft: 10 }}>
+                              {showAllFlights ? (
+                                <ArrowUpwardIcon />
+                              ) : (
+                                <ArrowDownwardIcon />
+                              )}
+                            </div>
+                            <div style={{ marginLeft: 30 }}>
+                              {showAllFlights
+                                ? "Show less"
+                                : "View all flights"}
+                            </div>
                           </div>
                         </Box>
                       )}
