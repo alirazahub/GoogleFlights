@@ -1,6 +1,6 @@
 import axios from "axios";
 
-let API_KEY = "735a0be07cmshae4cde5898201d1p18dc4cjsn5c869cdf926b";
+let API_KEY = import.meta.env.VITE_RAPIDAPI_KEY;
 const API_HOST = "sky-scrapper.p.rapidapi.com";
 
 const apiClient = axios.create({
