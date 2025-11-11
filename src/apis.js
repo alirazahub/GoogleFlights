@@ -1,8 +1,6 @@
 import axios from "axios";
 
-// const API_KEY = import.meta.env.VITE_API_KEY;
-const API_KEY = "fec23d52f1mshb76998ba9832087p12a9d7jsn98620aa23fde";
-// const API_HOST = import.meta.env.VITE_API_HOST;
+let API_KEY = "735a0be07cmshae4cde5898201d1p18dc4cjsn5c869cdf926b";
 const API_HOST = "sky-scrapper.p.rapidapi.com";
 
 const apiClient = axios.create({
@@ -61,4 +59,12 @@ export const searchFlights = async ({
     countryCode: "US",
     limit: '20',
   });
+};
+
+export const setApiKey = (newKey) => {
+  if (!newKey) return;
+  API_KEY = newKey;
+  if (apiClient && apiClient.defaults && apiClient.defaults.headers) {
+    apiClient.defaults.headers["x-rapidapi-key"] = newKey;
+  }
 };
