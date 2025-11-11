@@ -113,7 +113,6 @@ const FlightItineraryCard = ({ itinerary }) => {
 
   const dayIndicator = dayDifference > 0 ? `+${dayDifference}` : "";
 
-  // Tooltip text for time
   const timeTooltip = `${departureTime.format(
     "MMM D, h:mm A"
   )} - ${arrivalTime.format("MMM D, h:mm A")} ${
@@ -121,16 +120,13 @@ const FlightItineraryCard = ({ itinerary }) => {
       ? `(${dayDifference} day${dayDifference > 1 ? "s" : ""} travel time)`
       : "(Same day arrival)"
   }`;
-  // ------------------------------------
 
-  // Map operating carriers to get a unique list of names for display
   const operatingCarrierNames = [
     ...new Set(
       departureLeg.segments.map((s) => (s.operatingCarrier ? s.operatingCarrier.name.split(" ")[0] : ""))
     ),
   ].join(", ");
 
-  // Build unique list of operator objects for logos in the summary
   const uniqueOperators = Object.values(
     departureLeg.segments.reduce((acc, s) => {
       const op = s.operatingCarrier || departureLeg.carriers?.marketing?.[0];
@@ -149,7 +145,6 @@ const FlightItineraryCard = ({ itinerary }) => {
   };
 
   const price = itinerary.price?.formatted || "N/A";
-  // Find the first layover city and duration for display in the summary
   const firstLayover = departureLeg.segments.reduce(
     (acc, segment, index, array) => {
       if (acc) return acc;
@@ -210,7 +205,6 @@ const FlightItineraryCard = ({ itinerary }) => {
           <Grid container display={'flex'} justifyContent={"space-between"} spacing={2} alignItems="center">
             <Grid item xs={12} md={5}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                {/* If only one operator, show its logo; if multiple, show up to 3 overlapping avatars */}
                 {uniqueOperators.length <= 1 ? (
                   <Avatar
                     sx={{

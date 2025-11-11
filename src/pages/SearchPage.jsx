@@ -47,7 +47,7 @@ const SearchPage = () => {
   const [flightResults, setFlightResults] = useState(null);
   const [sortField, setSortField] = useState("price");
   const [sortOrder, setSortOrder] = useState("asc");
-  
+
   useEffect(() => {
     setVisibleCount(INITIAL_VISIBLE);
   }, [flightResults, sortField, sortOrder]);
@@ -360,7 +360,6 @@ const SearchPage = () => {
                 </FormControl>
               </Grid>
 
-              {/* DESTINATION Autocomplete */}
               <Grid item xs={12} sm={6} md={3}>
                 <FormControl sx={{ minWidth: 245 }}>
                   <Autocomplete
@@ -444,7 +443,6 @@ const SearchPage = () => {
               </Grid>
             </Grid>
 
-            {/* Search Button */}
             <div style={{ marginTop: "30px", textAlign: "center" }}>
               <Button
                 variant="search"
@@ -571,7 +569,6 @@ const SearchPage = () => {
                               cursor: "pointer",
                             }}
                             onClick={() => {
-                              // If already showing all, collapse back to initial; otherwise, show 10 more (or remaining)
                               setVisibleCount((v) =>
                                 v >= sortedItineraries.length
                                   ? INITIAL_VISIBLE
