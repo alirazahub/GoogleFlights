@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // const API_KEY = import.meta.env.VITE_API_KEY;
-const API_KEY = "612ee87b7amsh65ba2f45c942485p1a2ce1jsnf1b81d1fbd72";
+const API_KEY = "a7ab65d917mshb00313b53b173d1p17bea5jsna41ce0c36925";
 // const API_HOST = import.meta.env.VITE_API_HOST;
 const API_HOST = "sky-scrapper.p.rapidapi.com";
 

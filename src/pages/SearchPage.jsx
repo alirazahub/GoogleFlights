@@ -497,7 +497,7 @@ const SearchPage = () => {
                           fontSize={{ xs: 10, sm: 12, md: 14 }}
                           fontWeight={400}
                           color="#9aa0a6"
-                          mt={{ xs: 0.5, sm: 1 }}
+                          mb={{ xs: 0.5, sm: 1 }}
                         >
                           Prices include required taxes + fees for {passengers}{" "}
                           passengers. Optional charges and bag fees may apply.
