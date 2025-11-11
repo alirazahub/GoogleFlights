@@ -213,16 +213,16 @@ const FlightItineraryCard = ({ itinerary }) => {
                     <Typography variant="body1" fontWeight={500}>
                       {departureTimeDisplay} — {arrivalTimeDisplay}
                       {dayIndicator && (
-                        <Box
+                        <sup
                           component="span"
-                          sx={{
-                            ml: 0.5,
+                          style={{
+                            marginLeft: 2,
                             color: "text.secondary",
-                            fontSize: "0.7em",
+                            fontSize: "0.8em",
                           }}
                         >
                           {dayIndicator}
-                        </Box>
+                        </sup>
                       )}
                     </Typography>
                   </Tooltip>
@@ -350,8 +350,7 @@ const FlightItineraryCard = ({ itinerary }) => {
               {renderDetailedItinerary({ legs: [returnLeg] })}
             </>
           )}
-
-          <Divider sx={{ my: 3 }} />
+          <Divider sx={{ my: 2 }} />
 
           <Box sx={{ mt: 2 }}>
             <Typography
@@ -364,7 +363,7 @@ const FlightItineraryCard = ({ itinerary }) => {
               />{" "}
               Fare Conditions
             </Typography>
-            <Grid container spacing={2}>
+            <Grid container spacing={3}>
               <Grid item xs={6} sm={3}>
                 <Typography
                   variant="body2"
@@ -427,7 +426,7 @@ const FlightItineraryCard = ({ itinerary }) => {
             color="text.secondary"
             sx={{
               display: "block",
-              mt: 3,
+              mt: 1,
               p: 1,
               bgcolor: "rgba(255,255,255,0.05)",
               borderRadius: 1,

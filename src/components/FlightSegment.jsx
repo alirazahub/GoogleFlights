@@ -1,5 +1,13 @@
 import React from "react";
-import { Box, Stack, Paper, Typography, Chip, Divider, Avatar } from "@mui/material";
+import {
+  Box,
+  Stack,
+  Paper,
+  Typography,
+  Chip,
+  Divider,
+  Avatar,
+} from "@mui/material";
 import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
 import FlightLandIcon from "@mui/icons-material/FlightLand";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -10,7 +18,7 @@ const FlightSegment = ({ segment, isLast }) => {
   const marketingCarrier = segment.marketingCarrier;
 
   return (
-    <Box sx={{ display: "flex", pt: 1 }}>
+    <Box sx={{ display: "flex" }}>
       <Stack alignItems="center" sx={{ mr: 2 }}>
         <Box
           sx={{
@@ -24,7 +32,9 @@ const FlightSegment = ({ segment, isLast }) => {
             zIndex: 2,
           }}
         >
-          <FlightTakeoffIcon sx={{ fontSize: 14, color: "background.default" }} />
+          <FlightTakeoffIcon
+            sx={{ fontSize: 14, color: "background.default" }}
+          />
         </Box>
 
         <Divider
@@ -54,19 +64,34 @@ const FlightSegment = ({ segment, isLast }) => {
         </Box>
       </Stack>
 
-      <Box sx={{ flexGrow: 1, pb: 2 }}>
-        <Paper elevation={0} sx={{ p: 1.5, mb: 1.5, bgcolor: "background.secondaryPaper" }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      <Box sx={{ flexGrow: 1 }}>
+        <Paper
+          elevation={0}
+          sx={{ p: 1, mb: 1.5, bgcolor: "background.secondaryPaper" }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+            }}
+          >
             <Box>
-              <Typography variant="h6" component="div" fontWeight={600} color="primary.light">
-                {dayjs(segment.departure).format("h:mm A")}
+              <Typography
+                fontSize={16}
+                component="div"
+                fontWeight={500}
+                color="primary.light"
+              >
+                {dayjs(segment.departure).format("h:mm A")} •{" "}
+                {dayjs(segment.departure).format("ddd, MMM D")}
               </Typography>
-              <Typography variant="body1">{segment.origin.parent?.name || segment.origin.name}</Typography>
-              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {segment.origin.displayCode} • {dayjs(segment.departure).format("ddd, MMM D")}
+              <Typography fontSize={12} sx={{ color: "text.secondary" }}>
+                {segment.origin.name} ({segment.origin.displayCode}) -{" "}
+                {segment.origin.parent.name}, {segment.origin.country}
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Chip
                 label={formatDuration(segment.durationInMinutes)}
                 size="medium"
@@ -76,43 +101,64 @@ const FlightSegment = ({ segment, isLast }) => {
               <Avatar
                 src={marketingCarrier?.logoUrl}
                 alt={marketingCarrier?.name}
-                sx={{ width: 40, height: 40, bgcolor: 'primary.main', fontWeight: 600 }}
+                sx={{
+                  width: 40,
+                  height: 40,
+                  bgcolor: "primary.main",
+                  fontWeight: 600,
+                }}
               >
-                {marketingCarrier?.name?.charAt(0) || marketingCarrier?.alternateId || "A"}
+                {marketingCarrier?.name?.charAt(0) ||
+                  marketingCarrier?.alternateId ||
+                  "A"}
               </Avatar>
             </Box>
           </Box>
         </Paper>
 
-        <Box sx={{ pl: 1, py: 0.5 }}>
+        <Box sx={{ pl: 1 }}>
           <Typography variant="body2" color="text.secondary">
             {marketingCarrier?.name} • {segment.cabinClass || "Economy"}
           </Typography>
           <Typography variant="caption" color="primary.light" fontWeight={500}>
             Flight {marketingCarrier?.alternateId} {segment.flightNumber}
           </Typography>
-          <Typography variant="caption" sx={{ display: "block", color: "text.disabled", mt: 0.5 }}>
-            Aircraft: {segment.aircraft || "Unknown"} • {segment.stopCount || 0} Stop(s)
-          </Typography>
         </Box>
 
-        <Paper elevation={0} sx={{ p: 1.5, mt: 1.5, bgcolor: "background.secondaryPaper" }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <Paper
+          elevation={0}
+          sx={{ p: 1, mt: 1, bgcolor: "background.secondaryPaper" }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+            }}
+          >
             <Box>
               <Typography
-                variant="h6"
-                component="div"
-                fontWeight={600}
-                color={dayjs(segment.arrival).day() !== dayjs(segment.departure).day() ? "warning.main" : "primary.light"}
+                fontSize={16}
+                fontWeight={500}
+                color={
+                  dayjs(segment.arrival).day() !==
+                  dayjs(segment.departure).day()
+                    ? "warning.main"
+                    : "primary.light"
+                }
               >
-                {dayjs(segment.arrival).format("h:mm A")}
-                {dayjs(segment.arrival).day() !== dayjs(segment.departure).day() && (
+                {dayjs(segment.arrival).format("h:mm A")} •{" "}
+                {dayjs(segment.arrival).format("ddd, MMM D")}
+                {dayjs(segment.arrival).day() !==
+                  dayjs(segment.departure).day() && (
                   <sup style={{ fontSize: "0.6em", marginLeft: 4 }}>+1 day</sup>
                 )}
               </Typography>
-              <Typography variant="body1">{segment.destination.parent?.name || segment.destination.name}</Typography>
-              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {segment.destination.displayCode} • {dayjs(segment.arrival).format("ddd, MMM D")}
+              <Typography fontSize={12} sx={{ color: "text.secondary" }}>
+                {" "}
+                {console.log(segment)}
+                {segment.destination.name} ({segment.destination.displayCode}) -{" "}
+                {segment.destination.parent.name}, {segment.destination.country}
               </Typography>
             </Box>
           </Box>
