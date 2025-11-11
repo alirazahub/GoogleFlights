@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Typography,
   Box,
@@ -42,11 +42,15 @@ const SearchPage = () => {
   const [loadingDeparture, setLoadingDeparture] = useState(false);
   const [loadingDestination, setLoadingDestination] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [showAllFlights, setShowAllFlights] = useState(false);
+  const INITIAL_VISIBLE = 3;
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
   const [flightResults, setFlightResults] = useState(null);
   const [sortField, setSortField] = useState("price");
   const [sortOrder, setSortOrder] = useState("asc");
-
+  
+  useEffect(() => {
+    setVisibleCount(INITIAL_VISIBLE);
+  }, [flightResults, sortField, sortOrder]);
   const sortedItineraries = useMemo(() => {
     const list = (flightResults?.data?.itineraries || []).slice();
     const safeNumber = (v) =>
@@ -546,17 +550,13 @@ const SearchPage = () => {
 
                   {sortedItineraries?.length > 0 ? (
                     <>
-                      {(showAllFlights
-                        ? sortedItineraries
-                        : sortedItineraries.slice(0, 3)
-                      ).map((itinerary, index) => (
+                      {(sortedItineraries.slice(0, visibleCount)).map((itinerary, index) => (
                         <FlightItineraryCard
                           key={itinerary?.id || index}
                           itinerary={itinerary}
                         />
                       ))}
-
-                      {sortedItineraries.length > 3 && (
+                      {sortedItineraries.length > INITIAL_VISIBLE && (
                         <Box
                           style={{
                             border: "1px solid rgba(255,255,255,0.4)",
@@ -570,19 +570,26 @@ const SearchPage = () => {
                               alignContent: "center",
                               cursor: "pointer",
                             }}
-                            onClick={() => setShowAllFlights((s) => !s)}
+                            onClick={() => {
+                              // If already showing all, collapse back to initial; otherwise, show 10 more (or remaining)
+                              setVisibleCount((v) =>
+                                v >= sortedItineraries.length
+                                  ? INITIAL_VISIBLE
+                                  : Math.min(sortedItineraries.length, v + 10)
+                              );
+                            }}
                           >
                             <div style={{ marginLeft: 10 }}>
-                              {showAllFlights ? (
+                              {visibleCount >= sortedItineraries.length ? (
                                 <ArrowUpwardIcon />
                               ) : (
                                 <ArrowDownwardIcon />
                               )}
                             </div>
                             <div style={{ marginLeft: 30 }}>
-                              {showAllFlights
+                              {visibleCount >= sortedItineraries.length
                                 ? "Show less"
-                                : "View all flights"}
+                                : "View more flights"}
                             </div>
                           </div>
                         </Box>

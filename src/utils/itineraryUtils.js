@@ -29,11 +29,11 @@ export const hasOvernight = (itinerary) => {
 export default { formatDuration, hasOvernight };
 
 export const DEST = {
-  skyId: "LOND",
-  entityId: "27544008",
-  localizedName: "London (Any)",
-  suggestionTitle: "London (Any)",
-  subtitle: "United Kingdom",
+  skyId: "DXB",
+  entityId: "95673506",
+  localizedName: "Dubai",
+  suggestionTitle: "Dubai (DXB)",
+  subtitle: "United Arab Emirates",
 };
 
 export const DEPART = {
