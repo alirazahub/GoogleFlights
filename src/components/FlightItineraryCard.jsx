@@ -126,9 +126,27 @@ const FlightItineraryCard = ({ itinerary }) => {
   // Map operating carriers to get a unique list of names for display
   const operatingCarrierNames = [
     ...new Set(
-      departureLeg.segments.map((s) => s.operatingCarrier.name.split(" ")[0])
+      departureLeg.segments.map((s) => (s.operatingCarrier ? s.operatingCarrier.name.split(" ")[0] : ""))
     ),
   ].join(", ");
+
+  // Build unique list of operator objects for logos in the summary
+  const uniqueOperators = Object.values(
+    departureLeg.segments.reduce((acc, s) => {
+      const op = s.operatingCarrier || departureLeg.carriers?.marketing?.[0];
+      const key = op?.alternateId || op?.id || op?.name || Math.random();
+      if (op && !acc[key]) acc[key] = op;
+      return acc;
+    }, {})
+  );
+
+  const getOperatorLogo = (op) => {
+    if (!op) return null;
+    if (op.logoUrl) return op.logoUrl;
+    if (op.alternateId)
+      return `https://logos.skyscnr.com/images/airlines/favicon/${op.alternateId}.png`;
+    return null;
+  };
 
   const price = itinerary.price?.formatted || "N/A";
   // Find the first layover city and duration for display in the summary
@@ -192,23 +210,43 @@ const FlightItineraryCard = ({ itinerary }) => {
           <Grid container display={'flex'} justifyContent={"space-between"} spacing={2} alignItems="center">
             <Grid item xs={12} md={5}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Avatar
-                  sx={{
-                    bgcolor: "primary.main",
-                    width: 40,
-                    height: 40,
-                    fontSize: "0.8rem",
-                    transition: "width 150ms ease, height 150ms ease",
-                    "@media (min-width:600px)": {
-                      width: 50,
-                      height: 50,
-                    },
-                  }}
-                  variant="rounded"
-                  src={departureLeg.carriers.marketing[0].logoUrl}
-                >
-                  {carrierName.charAt(0)}
-                </Avatar>
+                {/* If only one operator, show its logo; if multiple, show up to 3 overlapping avatars */}
+                {uniqueOperators.length <= 1 ? (
+                  <Avatar
+                    sx={{
+                      bgcolor: "primary.main",
+                      width: 40,
+                      height: 40,
+                      fontSize: "0.8rem",
+                      transition: "width 150ms ease, height 150ms ease",
+                      "@media (min-width:600px)": {
+                        width: 50,
+                        height: 50,
+                      },
+                    }}
+                    variant="rounded"
+                    src={getOperatorLogo(uniqueOperators[0]) || departureLeg.carriers.marketing[0]?.logoUrl}
+                  >
+                    {carrierName.charAt(0)}
+                  </Avatar>
+                ) : (
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    {uniqueOperators.slice(0, 3).map((op, i) => (
+                      <Avatar
+                        key={i}
+                        src={getOperatorLogo(op)}
+                        alt={op?.name}
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          border: "2px solid rgba(0,0,0,0)",
+                          ml: i === 0 ? 0 : -1.2,
+                          zIndex: 10 - i,
+                        }}
+                      />
+                    ))}
+                  </Box>
+                )}
                 <Box>
                   <Tooltip title={timeTooltip} arrow>
                     <Typography variant="body1" fontWeight={500}>

@@ -25,17 +25,16 @@ import dayjs from "dayjs";
 import { searchAirports, searchFlights } from "../apis";
 import FlightItineraryCard from "../components/FlightItineraryCard";
 import {
-  flightResultsFile,
-  INITIAL_LONDON,
-  INITIAL_NEW_YORK,
+  DEPART,
+  DEST,
 } from "../utils/itineraryUtils.js";
 
 const SearchPage = () => {
   const [tripType, setTripType] = useState("round");
   const [passengers, setPassengers] = useState(1);
   const [cabinClass, setCabinClass] = useState("economy");
-  const [departure, setDeparture] = useState(INITIAL_LONDON);
-  const [destination, setDestination] = useState(INITIAL_NEW_YORK);
+  const [departure, setDeparture] = useState(DEPART);
+  const [destination, setDestination] = useState(DEST);
   const [departureDate, setDepartureDate] = useState(dayjs().add(1, "day"));
   const [returnDate, setReturnDate] = useState(dayjs().add(8, "day"));
   const [departureOptions, setDepartureOptions] = useState([]);
@@ -44,7 +43,7 @@ const SearchPage = () => {
   const [loadingDestination, setLoadingDestination] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [showAllFlights, setShowAllFlights] = useState(false);
-  const [flightResults, setFlightResults] = useState(flightResultsFile);
+  const [flightResults, setFlightResults] = useState(null);
   const [sortField, setSortField] = useState("price");
   const [sortOrder, setSortOrder] = useState("asc");
 

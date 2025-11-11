@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // const API_KEY = import.meta.env.VITE_API_KEY;
-const API_KEY = "a7ab65d917mshb00313b53b173d1p17bea5jsna41ce0c36925";
+const API_KEY = "fec23d52f1mshb76998ba9832087p12a9d7jsn98620aa23fde";
 // const API_HOST = import.meta.env.VITE_API_HOST;
 const API_HOST = "sky-scrapper.p.rapidapi.com";
 
@@ -59,5 +59,6 @@ export const searchFlights = async ({
     currency: "USD",
     market: "en-US",
     countryCode: "US",
+    limit: '20',
   });
 };

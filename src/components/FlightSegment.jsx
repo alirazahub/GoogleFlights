@@ -16,6 +16,12 @@ import { formatDuration } from "../utils/itineraryUtils";
 
 const FlightSegment = ({ segment, isLast }) => {
   const marketingCarrier = segment.marketingCarrier;
+  const operator = segment.operatingCarrier || marketingCarrier;
+  const operatorLogoUrl =
+    operator?.logoUrl ||
+    (operator?.alternateId
+      ? `https://logos.skyscnr.com/images/airlines/favicon/${operator.alternateId}.png`
+      : null);
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -99,8 +105,8 @@ const FlightSegment = ({ segment, isLast }) => {
                 icon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
               />
               <Avatar
-                src={marketingCarrier?.logoUrl}
-                alt={marketingCarrier?.name}
+                src={operatorLogoUrl}
+                alt={operator?.name}
                 sx={{
                   width: 40,
                   height: 40,
@@ -108,9 +114,7 @@ const FlightSegment = ({ segment, isLast }) => {
                   fontWeight: 600,
                 }}
               >
-                {marketingCarrier?.name?.charAt(0) ||
-                  marketingCarrier?.alternateId ||
-                  "A"}
+                {operator?.name?.charAt(0) || operator?.alternateId || "A"}
               </Avatar>
             </Box>
           </Box>
@@ -118,10 +122,15 @@ const FlightSegment = ({ segment, isLast }) => {
 
         <Box sx={{ pl: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            {marketingCarrier?.name} • {segment.cabinClass || "Economy"}
+            {operator?.name}
+            {marketingCarrier && marketingCarrier.name && marketingCarrier.name !== operator?.name && (
+              <span style={{ color: "rgba(255,255,255,0.6)", marginLeft: 6, fontSize: "0.85em" }}>
+                (Marketing: {marketingCarrier.name})
+              </span>
+            )}{" "}• {segment.cabinClass || "Economy"}
           </Typography>
           <Typography variant="caption" color="primary.light" fontWeight={500}>
-            Flight {marketingCarrier?.alternateId} {segment.flightNumber}
+            Flight {segment.flightNumber}
           </Typography>
         </Box>
 
