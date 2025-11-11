@@ -38,9 +38,9 @@ export const INITIAL_LONDON = {
 };
 
 export const INITIAL_NEW_YORK = {
-  skyId: "NYCA",
-  entityId: "27537542",
-  localizedName: "New York (Any)",
-  suggestionTitle: "New York (Any)",
-  subtitle: "United States",
+  skyId: "LHE",
+  entityId: "128667890",
+  localizedName: "Lahore",
+  suggestionTitle: "Lahore (LHE)",
+  subtitle: "Pakistan",
 };

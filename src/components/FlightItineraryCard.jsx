@@ -189,7 +189,7 @@ const FlightItineraryCard = ({ itinerary }) => {
           },
         }}
       >
-        <Box sx={{ p: 2, width: "100%" }}>
+        <Box sx={{ p:1, width: "100%" }}>
           <Grid display={"flex"} justifyContent={'space-between'} alignItems="center" spacing={2}>
             {/* Left Section: Time, Route, Airlines */}
             <Grid>

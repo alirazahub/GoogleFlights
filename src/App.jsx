@@ -12,7 +12,13 @@ import {
   TextField,
   CircularProgress,
   Paper,
+  Select,
+  MenuItem,
+  InputLabel,
+  IconButton,
 } from "@mui/material";
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -38,6 +44,8 @@ const App = () => {
   const [loadingDeparture, setLoadingDeparture] = React.useState(false);
   const [loadingDestination, setLoadingDestination] = React.useState(false);
   const [isSearching, setIsSearching] = React.useState(false);
+  // control whether to show all flight results or only a limited preview
+  const [showAllFlights, setShowAllFlights] = React.useState(false);
   const [flightResults, setFlightResults] = React.useState({
     status: true,
     timestamp: 1762865319225,
@@ -3054,6 +3062,76 @@ const App = () => {
         "https://content.skyscnr.com/m/3719e8f4a5daf43d/original/Flights-Placeholder.jpg",
     },
   });
+  const [sortField, setSortField] = React.useState("price");
+  const [sortOrder, setSortOrder] = React.useState("asc"); // 'asc' | 'desc'
+
+  const sortedItineraries = React.useMemo(() => {
+    const list = (flightResults?.data?.itineraries || []).slice();
+    const safeNumber = (v) => (typeof v === "number" && !Number.isNaN(v) ? v : Number.MAX_SAFE_INTEGER);
+
+    const getPrice = (it) => safeNumber(it?.price?.raw);
+    const getDeparture = (it) => {
+      try {
+        const firstLeg = (it.legs && it.legs[0]) || null;
+        return firstLeg && firstLeg.departure ? dayjs(firstLeg.departure).valueOf() : Number.MAX_SAFE_INTEGER;
+      } catch (e) {
+        return Number.MAX_SAFE_INTEGER;
+      }
+    };
+    const getArrival = (it) => {
+      try {
+        const legs = it.legs || [];
+        const last = legs[legs.length - 1] || null;
+        return last && last.arrival ? dayjs(last.arrival).valueOf() : Number.MAX_SAFE_INTEGER;
+      } catch (e) {
+        return Number.MAX_SAFE_INTEGER;
+      }
+    };
+    const getDuration = (it) => {
+      try {
+        if (!Array.isArray(it.legs)) return Number.MAX_SAFE_INTEGER;
+        let total = 0;
+        for (const l of it.legs) {
+          total += Number(l?.durationInMinutes || 0);
+        }
+        return safeNumber(total);
+      } catch (e) {
+        return Number.MAX_SAFE_INTEGER;
+      }
+    };
+
+    list.sort((a, b) => {
+      let va = 0;
+      let vb = 0;
+      switch (sortField) {
+        case "price":
+          va = getPrice(a);
+          vb = getPrice(b);
+          break;
+        case "departure":
+          va = getDeparture(a);
+          vb = getDeparture(b);
+          break;
+        case "arrival":
+          va = getArrival(a);
+          vb = getArrival(b);
+          break;
+        case "duration":
+          va = getDuration(a);
+          vb = getDuration(b);
+          break;
+        default:
+          va = getPrice(a);
+          vb = getPrice(b);
+      }
+      if (va < vb) return -1;
+      if (va > vb) return 1;
+      return 0;
+    });
+
+    if (sortOrder === "desc") list.reverse();
+    return list;
+  }, [flightResults, sortField, sortOrder]);
 
   const fetchAirportSuggestions = async (
     query,
@@ -3141,7 +3219,7 @@ const App = () => {
       <CssBaseline />
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Container maxWidth="lg">
-          <Box textAlign="center" mt={4}>
+          <Box textAlign="center">
             <img
               src="https://www.gstatic.com/travel-frontend/animation/hero/flights_nc_dark_theme_4.svg"
               alt="Travel Hero Illustration"
@@ -3157,7 +3235,6 @@ const App = () => {
           </Box>
 
           <Container maxWidth="lg">
-            {/* Search Form (Unchanged) */}
             <Box
               sx={{
                 bgcolor: "background.paper",
@@ -3356,7 +3433,6 @@ const App = () => {
                   </FormControl>
                 </Grid>
 
-                {/* Departure Date Picker */}
                 <Grid item xs={12} sm={6} md={datePickerGridSize}>
                   <DatePicker
                     label="Date"
@@ -3366,8 +3442,6 @@ const App = () => {
                     slotProps={{ textField: { fullWidth: true } }}
                   />
                 </Grid>
-
-                {/* Return Date Picker - VISIBLE BUT RESERVING SPACE */}
                 <Grid
                   item
                   xs={12}
@@ -3407,7 +3481,6 @@ const App = () => {
               </div>
             </Box>
 
-            {/* --- FLIGHT SEARCH RESULTS SECTION --- */}
             {isSearching && (
               <Box textAlign="center" my={4}>
                 <CircularProgress color="primary" />
@@ -3446,17 +3519,56 @@ const App = () => {
                             fees may apply.
                           </Typography>
                         </div>
-                        <div>Sorting here</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <FormControl size="small" sx={{ minWidth: 160 }}>
+                            <InputLabel id="sort-by-label">Sort by</InputLabel>
+                            <Select
+                              labelId="sort-by-label"
+                              value={sortField}
+                              label="Sort by"
+                              onChange={(e) => setSortField(e.target.value)}
+                            >
+                              <MenuItem value="price">Price</MenuItem>
+                              <MenuItem value="departure">Departure time</MenuItem>
+                              <MenuItem value="arrival">Arrival time</MenuItem>
+                              <MenuItem value="duration">Duration</MenuItem>
+                            </Select>
+                          </FormControl>
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              setSortOrder((o) => (o === "asc" ? "desc" : "asc"))
+                            }
+                            title={sortOrder === "asc" ? "Ascending" : "Descending"}
+                          >
+                            {sortOrder === "asc" ? (
+                              <ArrowUpwardIcon />
+                            ) : (
+                              <ArrowDownwardIcon />
+                            )}
+                          </IconButton>
+                        </div>
                       </Grid>
                     </div>
 
-                    {flightResults.data?.itineraries?.length > 0 ? (
-                      flightResults.data.itineraries.map((itinerary, index) => (
-                        <FlightItineraryCard
-                          key={index}
-                          itinerary={itinerary}
-                        />
-                      ))
+                    {sortedItineraries?.length > 0 ? (
+                      <>
+                        {(showAllFlights ? sortedItineraries : sortedItineraries.slice(0, 3)).map((itinerary, index) => (
+                          <FlightItineraryCard key={itinerary?.id || index} itinerary={itinerary} />
+                        ))}
+
+                        {sortedItineraries.length > 3 && (
+                          <Box style={{border: "1px solid rgba(255,255,255,0.4)", padding:12}} textAlign="center">
+                            <div
+                            style={{display:"flex", alignContent:'center', cursor:'pointer'}}
+                              onClick={() => setShowAllFlights((s) => !s)}
+                            >
+                              <div style={{marginLeft:10}}>{showAllFlights ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}</div>
+                              <div style={{marginLeft:30}}>{showAllFlights ? "Show less" : "View all flights"}</div>
+                            </div>
+                          </Box>
+                        )}
+                      </>
                     ) : (
                       <Typography>
                         No flight itineraries found for these parameters.
@@ -3466,8 +3578,6 @@ const App = () => {
                 )}
               </Box>
             )}
-
-            {/* --- END FLIGHT SEARCH RESULTS SECTION --- */}
           </Container>
         </Container>
       </LocalizationProvider>
