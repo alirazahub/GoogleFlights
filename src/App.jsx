@@ -110,12 +110,10 @@ const App = () => {
         <CssBaseline />
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Container maxWidth="lg">
-            {/* Hero Section */}
             <Box textAlign="center" mt={4}>
               <img
                 src="https://www.gstatic.com/travel-frontend/animation/hero/flights_nc_dark_theme_4.svg"
                 alt="Travel Hero Illustration"
-                style={{ width: "100%", maxWidth: "500px", height: "auto" }}
               />
               <Typography
                 style={{ marginTop: "-100px" }}
@@ -208,7 +206,7 @@ const App = () => {
   
                 {/* Search Button */}
                 <div style={{ marginTop: "30px", textAlign: "center" }}>
-                  <Button variant="search" size="large" startIcon={isSearching ? (<CircularProgress size={24} color="inherit" />) : (<SearchIcon />)} onClick={handleSearch} disabled={isSearching}>
+                  <Button variant="search" size="small" startIcon={isSearching ? (<CircularProgress size={24} color="inherit" />) : (<SearchIcon />)} onClick={handleSearch} disabled={isSearching}>
                     {isSearching ? "Searching..." : "Search Flights"}
                   </Button>
                 </div>
