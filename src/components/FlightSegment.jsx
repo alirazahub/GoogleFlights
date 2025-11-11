@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Stack, Paper, Typography, Chip, Divider } from "@mui/material";
+import { Box, Stack, Paper, Typography, Chip, Divider, Avatar } from "@mui/material";
 import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
 import FlightLandIcon from "@mui/icons-material/FlightLand";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -66,12 +66,21 @@ const FlightSegment = ({ segment, isLast }) => {
                 {segment.origin.displayCode} • {dayjs(segment.departure).format("ddd, MMM D")}
               </Typography>
             </Box>
-            <Chip
-              label={formatDuration(segment.durationInMinutes)}
-              size="medium"
-              sx={{ bgcolor: "rgba(255,255,255,0.1)", fontWeight: 500 }}
-              icon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
-            />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Chip
+                label={formatDuration(segment.durationInMinutes)}
+                size="medium"
+                sx={{ bgcolor: "rgba(255,255,255,0.1)", fontWeight: 500 }}
+                icon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
+              />
+              <Avatar
+                src={marketingCarrier?.logoUrl}
+                alt={marketingCarrier?.name}
+                sx={{ width: 40, height: 40, bgcolor: 'primary.main', fontWeight: 600 }}
+              >
+                {marketingCarrier?.name?.charAt(0) || marketingCarrier?.alternateId || "A"}
+              </Avatar>
+            </Box>
           </Box>
         </Paper>
 

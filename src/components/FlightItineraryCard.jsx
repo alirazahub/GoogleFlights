@@ -11,12 +11,15 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
 import FlightLandIcon from "@mui/icons-material/FlightLand";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import BedtimeIcon from "@mui/icons-material/Bedtime"; // Icon for overnight
 import dayjs from "dayjs";
 import FlightSegment from "./FlightSegment";
 import LayoverSegment from "./LayoverSegment";
@@ -53,7 +56,10 @@ const renderDetailedItinerary = (itinerary) => {
         if (nextDeparture) {
           const arrivalTime = dayjs(segment.arrival);
           const nextDepartureTime = dayjs(nextDeparture);
-          const durationInMinutes = nextDepartureTime.diff(arrivalTime, "minute");
+          const durationInMinutes = nextDepartureTime.diff(
+            arrivalTime,
+            "minute"
+          );
 
           segmentsAndLayovers.push({
             type: "layover",
@@ -68,10 +74,22 @@ const renderDetailedItinerary = (itinerary) => {
     <Box sx={{ mt: 2 }}>
       {segmentsAndLayovers.map((item, index) => {
         if (item.type === "flight") {
-          return <FlightSegment key={`f-${index}`} segment={item.data} isLast={index === segmentsAndLayovers.length - 1} />;
+          return (
+            <FlightSegment
+              key={`f-${index}`}
+              segment={item.data}
+              isLast={index === segmentsAndLayovers.length - 1}
+            />
+          );
         }
         if (item.type === "layover") {
-          return <LayoverSegment key={`l-${index}`} duration={item.data.duration} layoverCity={item.data.city} />;
+          return (
+            <LayoverSegment
+              key={`l-${index}`}
+              duration={item.data.duration}
+              layoverCity={item.data.city}
+            />
+          );
         }
         return null;
       })}
@@ -80,84 +98,351 @@ const renderDetailedItinerary = (itinerary) => {
 };
 
 const FlightItineraryCard = ({ itinerary }) => {
-
   const departureLeg = itinerary.legs[0];
   const returnLeg = itinerary.legs[1];
   const totalDuration = formatDuration(departureLeg.durationInMinutes);
   const totalStops = departureLeg.stopCount;
   const carrierName = departureLeg.carriers.marketing[0].name.split(" ")[0];
+
+  // Map operating carriers to get a unique list of names for display
+  const operatingCarrierNames = [
+    ...new Set(
+      departureLeg.segments.map((s) => s.operatingCarrier.name.split(" ")[0])
+    ),
+  ].join(", ");
+
   const price = itinerary.price?.formatted || "N/A";
-  const emissionSavings = itinerary.eco?.ecoContenderDelta ? Math.round(itinerary.eco.ecoContenderDelta) : 2234;
-  const emissionPercent = emissionSavings > 0 ? `+${Math.round((emissionSavings / 2234) * 100)}%` : "+65%";
+  const emissionSavings = itinerary.eco?.ecoContenderDelta
+    ? Math.round(itinerary.eco.ecoContenderDelta)
+    : 2234;
+  const emissionPercent =
+    emissionSavings > 0
+      ? `+${Math.round((emissionSavings / 2234) * 100)}%`
+      : "+65%";
+
+  // Find the first layover city and duration for display in the summary
+  const firstLayover = departureLeg.segments.reduce(
+    (acc, segment, index, array) => {
+      console.log(segment);
+      if (acc) return acc;
+      if (index < array.length - 1) {
+        const arrivalTime = dayjs(segment.arrival);
+        const nextDepartureTime = dayjs(array[index + 1].departure);
+        const durationInMinutes = nextDepartureTime.diff(arrivalTime, "minute");
+        if (durationInMinutes > 0) {
+          return {
+            duration: formatDuration(durationInMinutes),
+            city: segment.destination.parent.name,
+            country: segment.destination.country,
+            name: segment.destination.name,
+            airport: segment.destination.displayCode,
+          };
+        }
+      }
+      return acc;
+    },
+    null
+  );
+
+  const overnight = hasOvernight(itinerary);
+
   return (
     <Accordion
-      elevation={6}
+      disableGutters
       sx={{
-        my: 2,
-        borderRadius: 2,
         overflow: "hidden",
-        background: '#2c2c30',
+        background: "transparent",
         transition: "transform 180ms ease, box-shadow 180ms ease",
-        '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)' },
-        border: '1px solid rgba(255,255,255,0.05)',
-        '&.Mui-expanded': {
-          border: '1px solid rgba(255,255,255,0.1)',
-          background: '#2c2c30'
-        }
+        border: "1px solid rgba(255,255,255,0.4)",
+        "&.Mui-expanded": {
+          border: "1px solid rgba(255,255,255,0.1)",
+        },
       }}
     >
       <AccordionSummary
-        expandIcon={<ExpandMoreIcon sx={{ color: 'primary.light' }} />}
-        sx={{ p: 0 }}
+        expandIcon={
+          <IconButton
+            sx={{
+              cursor: "pointer",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+              },
+            }}
+          >
+            <ExpandMoreIcon />
+          </IconButton>
+        }
+        sx={{
+          "&:hover": {
+            cursor: "default",
+          },
+        }}
       >
-        <Box sx={{ p: 3, width: '100%' }}>
-          <Grid container alignItems="center" spacing={3}>
+        <Box sx={{ p: 2, width: "100%" }}>
+          <Grid container alignItems="center" spacing={2}>
+            {/* Left Section: Time, Route, Airlines */}
+            <Grid item xs={12} md={5}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                {/* First Airline Icon (using a placeholder Avatar) */}
+                <Avatar
+                  sx={{
+                    bgcolor: "primary.main",
+                    width: 40,
+                    height: 40,
+                    fontSize: "0.8rem",
+                  }}
+                  variant="rounded"
+                  src={departureLeg.carriers.marketing[0].logoUrl}
+                >
+                  {carrierName.charAt(0)}
+                </Avatar>
+                <Box>
+                  {/* Time from to */}
+                  <Typography variant="h6" fontWeight={700}>
+                    {dayjs(departureLeg.departure).format("h:mm A")} —{" "}
+                    {dayjs(departureLeg.arrival).format("h:mm A")}
+                  </Typography>
+                  {/* Name of all airlines that are operating */}
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: 0.5 }}
+                  >
+                    {operatingCarrierNames}
+                  </Typography>
+                </Box>
+              </Box>
+            </Grid>
+
+            {/* Middle Section: Total Time, Stops, and CO2 */}
+            <Grid item xs={12} md={5}>
+              <Grid container spacing={2}>
+                {/* Total Time & Route */}
+                <Grid item xs={4} sx={{ textAlign: "center" }}>
+                  <Typography variant="body1" fontWeight={600}>
+                    {totalDuration}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    <Tooltip
+                      title={`${departureLeg.origin.displayCode}: ${departureLeg.origin.city}, ${departureLeg.origin.country} to ${departureLeg.destination.displayCode}: ${departureLeg.destination.city}, ${departureLeg.destination.country}`}
+                    >
+                      {departureLeg.origin.displayCode} →{" "}
+                      {departureLeg.destination.displayCode}
+                    </Tooltip>
+                  </Typography>
+                </Grid>
+
+                {/* Stops & Layover Info */}
+                <Grid item xs={4}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 0.5,
+                    }}
+                  >
+                    <Typography variant="body1" fontWeight={600}>
+                      {totalStops} stop{totalStops !== 1 ? "s" : ""}
+                    </Typography>
+                    {overnight && (
+                      <BedtimeIcon
+                        fontSize="small"
+                        sx={{ color: "error.main" }}
+                      />
+                    )}
+                  </Box>
+                  <Typography variant="caption" color="text.secondary">
+                    {totalStops > 0 ? (
+                      firstLayover ? (
+                        <Tooltip
+                          title={`${firstLayover.name}, ${firstLayover.city}, ${firstLayover.country}`}
+                          arrow
+                        >
+                          {firstLayover.duration} in {firstLayover.airport}
+                        </Tooltip>
+                      ) : (
+                        "Layover details..."
+                      )
+                    ) : (
+                      "Direct"
+                    )}
+                  </Typography>
+                </Grid>
+
+                {/* CO2 Emissions */}
+                <Grid item xs={4} sx={{ textAlign: "center" }}>
+                  <Typography
+                    variant="body1"
+                    fontWeight={600}
+                    color="warning.main"
+                  >
+                    {emissionSavings} kg CO2e
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {emissionPercent} emissions
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Right Section: Price */}
+            <Grid item xs={12} md={2}>
+              <Box
+                sx={{
+                  textAlign: { xs: "left", md: "right" },
+                  pt: { xs: 2, md: 0 },
+                  borderTop: {
+                    xs: "1px solid rgba(255,255,255,0.1)",
+                    md: "none",
+                  },
+                  pl: { md: 2 },
+                }}
+              >
+                <Typography variant="h5" color="success.main" fontWeight={700}>
+                  {price}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Total Price
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
+
+          {/* This section contains the original chip-based design, keeping it for reference/fallback */}
+          {/* <Grid container alignItems="center" spacing={3} sx={{ mt: 1 }}>
             <Grid item xs={12} md={7}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56, fontWeight: 600 }} src={departureLeg.carriers.marketing[0].logoUrl}>
-                  {carrierName?.charAt(0) || "A"}
-                </Avatar>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="h6" fontWeight={700}>
-                    {dayjs(departureLeg.departure).format("h:mm A")} — {dayjs(departureLeg.arrival).format("h:mm A")}
+                    {dayjs(departureLeg.departure).format("h:mm A")} —{" "}
+                    {dayjs(departureLeg.arrival).format("h:mm A")}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 1 }}
+                  >
                     {departureLeg.origin.city} → {departureLeg.destination.city}
                   </Typography>
-                  <Box sx={{ mt: 0.5, display: "flex", gap: 1, flexWrap: "wrap", alignItems: "center" }}>
-                    <Chip label={totalDuration} size="small" sx={{ bgcolor: "rgba(255,255,255,0.06)", color: "text.primary", fontWeight: 500 }} />
-                    <Chip label={`${totalStops} stop${totalStops !== 1 ? "s" : ""}`} size="small" sx={{ bgcolor: "rgba(255,255,255,0.06)", color: "text.primary", fontWeight: 600 }} />
-                    {hasOvernight(itinerary) && <Chip size="small" label="Overnight" sx={{ ml: 0.5, height: 24, bgcolor: "rgba(200,1,2,10)", color: "text.error", fontWeight: 700 }} />}
-                    {itinerary.tags && itinerary.tags.map((tag, index) => <Chip key={index} label={tag.replace(/_/g, " ")} size="small" sx={{ bgcolor: "rgba(255,255,255,0.04)", color: "text.primary", fontWeight: 500 }} />)}
+                  <Box
+                    sx={{
+                      mt: 0.5,
+                      display: "flex",
+                      gap: 1,
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Chip
+                      label={totalDuration}
+                      size="small"
+                      sx={{
+                        bgcolor: "rgba(255,255,255,0.06)",
+                        color: "text.primary",
+                        fontWeight: 500,
+                      }}
+                    />
+                    <Chip
+                      label={`${totalStops} stop${totalStops !== 1 ? "s" : ""}`}
+                      size="small"
+                      sx={{
+                        bgcolor: "rgba(255,255,255,0.06)",
+                        color: "text.primary",
+                        fontWeight: 600,
+                      }}
+                    />
+                    {hasOvernight(itinerary) && (
+                      <Chip
+                        size="small"
+                        label="Overnight"
+                        sx={{
+                          ml: 0.5,
+                          height: 24,
+                          bgcolor: "rgba(200,1,2,10)",
+                          color: "text.error",
+                          fontWeight: 700,
+                        }}
+                      />
+                    )}
+                    {itinerary.tags &&
+                      itinerary.tags.map((tag, index) => (
+                        <Chip
+                          key={index}
+                          label={tag.replace(/_/g, " ")}
+                          size="small"
+                          sx={{
+                            bgcolor: "rgba(255,255,255,0.04)",
+                            color: "text.primary",
+                            fontWeight: 500,
+                          }}
+                        />
+                      ))}
                   </Box>
                 </Box>
               </Box>
             </Grid>
 
             <Grid item xs={8} md={3}>
-              <Box sx={{ textAlign: { xs: "left", md: "center" }, borderLeft: { md: "1px solid rgba(255,255,255,0.1)" }, pl: { md: 3 } }}>
-                <Typography variant="subtitle2" color="warning.main" fontWeight={600}>
+              <Box
+                sx={{
+                  textAlign: { xs: "left", md: "center" },
+                  borderLeft: { md: "1px solid rgba(255,255,255,0.1)" },
+                  pl: { md: 3 },
+                }}
+              >
+                <Typography
+                  variant="subtitle2"
+                  color="warning.main"
+                  fontWeight={600}
+                >
                   {emissionSavings} kg CO2e
                 </Typography>
-                <Typography variant="caption" color="text.secondary">{emissionPercent} vs avg</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {emissionPercent} vs avg
+                </Typography>
               </Box>
             </Grid>
 
             <Grid item xs={4} md={2}>
-              <Box sx={{ display: "flex", justifyContent: { xs: "flex-end", md: "flex-end" }, alignItems: "center", gap: 2 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: { xs: "flex-end", md: "flex-end" },
+                  alignItems: "center",
+                  gap: 2,
+                }}
+              >
                 <Box sx={{ textAlign: "right" }}>
-                  <Typography variant="h5" color="success.main" fontWeight={700}>{price}</Typography>
-                  <Typography variant="caption" color="text.secondary">Total</Typography>
+                  <Typography
+                    variant="h5"
+                    color="success.main"
+                    fontWeight={700}
+                  >
+                    {price}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Total
+                  </Typography>
                 </Box>
               </Box>
             </Grid>
-          </Grid>
+          </Grid> */}
         </Box>
       </AccordionSummary>
 
       <AccordionDetails sx={{ p: 0 }}>
         <Box sx={{ p: 3, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-          <Typography variant="h6" fontWeight={600} sx={{ mb: 2, color: "primary.light", borderBottom: "1px solid rgba(255,255,255,0.1)", pb: 1 }}>
+          <Typography
+            variant="h6"
+            fontWeight={600}
+            sx={{
+              mb: 2,
+              color: "primary.light",
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
+              pb: 1,
+            }}
+          >
             <FlightTakeoffIcon sx={{ mr: 1, verticalAlign: "middle" }} />
             Outbound • {dayjs(departureLeg.departure).format("dddd, MMM D")}
           </Typography>
@@ -166,7 +451,16 @@ const FlightItineraryCard = ({ itinerary }) => {
           {returnLeg && (
             <>
               <Divider sx={{ my: 4 }} />
-              <Typography variant="h6" fontWeight={600} sx={{ mb: 2, color: "primary.light", borderBottom: "1px solid rgba(255,255,255,0.1)", pb: 1 }}>
+              <Typography
+                variant="h6"
+                fontWeight={600}
+                sx={{
+                  mb: 2,
+                  color: "primary.light",
+                  borderBottom: "1px solid rgba(255,255,255,0.1)",
+                  pb: 1,
+                }}
+              >
                 <FlightLandIcon sx={{ mr: 1, verticalAlign: "middle" }} />
                 Return • {dayjs(returnLeg.departure).format("dddd, MMM D")}
               </Typography>
@@ -177,35 +471,88 @@ const FlightItineraryCard = ({ itinerary }) => {
           <Divider sx={{ my: 3 }} />
 
           <Box sx={{ mt: 2 }}>
-            <Typography variant="h6" fontWeight={600} sx={{ mb: 1, color: "text.primary" }}>
-              <AttachMoneyIcon sx={{ mr: 0.5, verticalAlign: "middle", color: "success.main" }} /> Fare Conditions
+            <Typography
+              variant="h6"
+              fontWeight={600}
+              sx={{ mb: 1, color: "text.primary" }}
+            >
+              <AttachMoneyIcon
+                sx={{ mr: 0.5, verticalAlign: "middle", color: "success.main" }}
+              />{" "}
+              Fare Conditions
             </Typography>
             <Grid container spacing={2}>
               <Grid item xs={6} sm={3}>
-                <Typography variant="body2" color={itinerary.farePolicy?.isChangeAllowed ? "success.main" : "error.main"}>
-                  {itinerary.farePolicy?.isChangeAllowed ? "✓ Changes Allowed" : "✗ No Changes"}
+                <Typography
+                  variant="body2"
+                  color={
+                    itinerary.farePolicy?.isChangeAllowed
+                      ? "success.main"
+                      : "error.main"
+                  }
+                >
+                  {itinerary.farePolicy?.isChangeAllowed
+                    ? "✓ Changes Allowed"
+                    : "✗ No Changes"}
                 </Typography>
               </Grid>
               <Grid item xs={6} sm={3}>
-                <Typography variant="body2" color={itinerary.farePolicy?.isCancellationAllowed ? "success.main" : "error.main"}>
-                  {itinerary.farePolicy?.isCancellationAllowed ? "✓ Cancellation Allowed" : "✗ No Cancellation"}
+                <Typography
+                  variant="body2"
+                  color={
+                    itinerary.farePolicy?.isCancellationAllowed
+                      ? "success.main"
+                      : "error.main"
+                  }
+                >
+                  {itinerary.farePolicy?.isCancellationAllowed
+                    ? "✓ Cancellation Allowed"
+                    : "✗ No Cancellation"}
                 </Typography>
               </Grid>
               <Grid item xs={6} sm={3}>
-                <Typography variant="body2" color={itinerary.farePolicy?.isPartiallyRefundable ? "warning.main" : "text.secondary"}>
-                  {itinerary.farePolicy?.isPartiallyRefundable ? "⚠️ Partial Refund" : "Non-refundable"}
+                <Typography
+                  variant="body2"
+                  color={
+                    itinerary.farePolicy?.isPartiallyRefundable
+                      ? "warning.main"
+                      : "text.secondary"
+                  }
+                >
+                  {itinerary.farePolicy?.isPartiallyRefundable
+                    ? "⚠️ Partial Refund"
+                    : "Non-refundable"}
                 </Typography>
               </Grid>
               <Grid item xs={6} sm={3}>
-                <Typography variant="body2" color={itinerary.isSelfTransfer ? "error.main" : "success.main"}>
-                  {itinerary.isSelfTransfer ? "⚠️ Self Transfer" : "Protected Transfer"}
+                <Typography
+                  variant="body2"
+                  color={
+                    itinerary.isSelfTransfer ? "error.main" : "success.main"
+                  }
+                >
+                  {itinerary.isSelfTransfer
+                    ? "⚠️ Self Transfer"
+                    : "Protected Transfer"}
                 </Typography>
               </Grid>
             </Grid>
           </Box>
 
-          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 3, p: 1, bgcolor: "rgba(255,255,255,0.05)", borderRadius: 1 }}>
-            Disclaimer: Prices are a total estimated cost for {itinerary.legs.length === 2 ? "round-trip" : "one-way"} travel. Fare rules and baggage allowances may vary by carrier.
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              display: "block",
+              mt: 3,
+              p: 1,
+              bgcolor: "rgba(255,255,255,0.05)",
+              borderRadius: 1,
+            }}
+          >
+            Disclaimer: Prices are a total estimated cost for{" "}
+            {itinerary.legs.length === 2 ? "round-trip" : "one-way"} travel.
+            Fare rules and baggage allowances may vary by carrier.
           </Typography>
         </Box>
       </AccordionDetails>
