@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // const API_KEY = import.meta.env.VITE_API_KEY;
-const API_KEY = "2af00adae7msh2f8c5d1a91b838dp1c1d12jsn46f433fd178f";
+const API_KEY = "ba14143d17msh29d4e55ff290e3ap19d7f1jsn02e0ae295fe0";
 // const API_HOST = import.meta.env.VITE_API_HOST;
 const API_HOST = "sky-scrapper.p.rapidapi.com";
 
@@ -44,6 +44,7 @@ export const searchFlights = async ({
   date,
   cabinClass,
   adults,
+  returnDate,
 }) => {
   return fetchFromAPI("/searchFlights", {
     originSkyId: origId,
@@ -51,6 +52,7 @@ export const searchFlights = async ({
     originEntityId: origEId,
     destinationEntityId: destEId,
     date,
+    returnDate,
     cabinClass: cabinClass,
     adults,
     sortBy: "best",
