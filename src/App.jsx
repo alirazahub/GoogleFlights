@@ -104,7 +104,75 @@ const App = () => {
     };
   
     const datePickerGridSize = 3;
-  
+  const itinerary = [
+    {
+      legs: [
+        {
+          departure: "2025-06-01T08:00:00-04:00",
+          arrival: "2025-06-01T13:30:00+01:00",
+          origin: { city: "New York", name: "John F. Kennedy International Airport", code: "JFK" },
+          destination: { city: "London", name: "Heathrow Airport", code: "LHR" },
+          durationInMinutes: 330,
+          stopCount: 1,
+          carriers: {
+            marketing: [
+              { name: "Example Air", logoUrl: "https://via.placeholder.com/56x56.png?text=EA" }
+            ]
+          },
+          segments: [
+            {
+              departure: "2025-06-01T08:00:00-04:00",
+              arrival: "2025-06-01T10:00:00-04:00",
+              origin: { name: "JFK", city: "New York" },
+              destination: { name: "DUB", city: "Dublin" },
+              flightNumber: "EA123",
+              cabinClass: "Economy"
+            },
+            {
+              departure: "2025-06-01T11:30:00+01:00",
+              arrival: "2025-06-01T13:30:00+01:00",
+              origin: { name: "DUB", city: "Dublin" },
+              destination: { name: "LHR", city: "London" },
+              flightNumber: "EA456",
+              cabinClass: "Economy"
+            }
+          ]
+        },
+        {
+          departure: "2025-06-10T16:00:00+01:00",
+          arrival: "2025-06-10T20:30:00-04:00",
+          origin: { city: "London", name: "Heathrow Airport", code: "LHR" },
+          destination: { city: "New York", name: "John F. Kennedy International Airport", code: "JFK" },
+          durationInMinutes: 270,
+          stopCount: 0,
+          carriers: {
+            marketing: [
+              { name: "Example Air", logoUrl: "https://via.placeholder.com/56x56.png?text=EA" }
+            ]
+          },
+          segments: [
+            {
+              departure: "2025-06-10T16:00:00+01:00",
+              arrival: "2025-06-10T20:30:00-04:00",
+              origin: { name: "LHR", city: "London" },
+              destination: { name: "JFK", city: "New York" },
+              flightNumber: "EA789",
+              cabinClass: "Economy"
+            }
+          ]
+        }
+      ],
+      price: { formatted: "$799" },
+      eco: { ecoContenderDelta: 1200 },
+      tags: ["best_value", "friendly_baggage"],
+      farePolicy: {
+        isChangeAllowed: true,
+        isCancellationAllowed: false,
+        isPartiallyRefundable: false
+      },
+      isSelfTransfer: false
+    }
+  ]
     return (
       <ThemeProvider theme={darkTheme}>
         <CssBaseline />
@@ -222,7 +290,7 @@ const App = () => {
                 </Box>
               )}
   
-              {flightResults && !isSearching && (
+              {/* {flightResults && !isSearching && (
                 <Box mt={4}>
                   {flightResults.status === false && flightResults.error ? (
                     <Paper sx={{ p: 3, backgroundColor: 'red', color: 'white' }}>
@@ -244,7 +312,10 @@ const App = () => {
                     </>
                   )}
                 </Box>
-              )}
+              )} */}
+              {itinerary.slice(0, 5).map((itinerary, index) => (
+                            <FlightItineraryCard key={index} itinerary={itinerary} />
+                          ))}
               {/* --- END FLIGHT SEARCH RESULTS SECTION --- */}
             </Container>
           </Container>

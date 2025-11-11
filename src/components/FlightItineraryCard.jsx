@@ -96,12 +96,13 @@ const FlightItineraryCard = ({ itinerary }) => {
         my: 2,
         borderRadius: 2,
         overflow: "hidden",
+        background: '#2c2c30',
         transition: "transform 180ms ease, box-shadow 180ms ease",
         '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)' },
         border: '1px solid rgba(255,255,255,0.05)',
         '&.Mui-expanded': {
-          border: '1px solid #8ab4f8',
-          background: 'rgba(100, 181, 246, 0.03)'
+          border: '1px solid rgba(255,255,255,0.1)',
+          background: '#2c2c30'
         }
       }}
     >
